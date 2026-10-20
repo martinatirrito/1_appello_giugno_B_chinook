@@ -33,6 +33,7 @@ class View(ft.UserControl):
 
 
         self._ddAlbum = ft.Dropdown(label="Album")
+        self._controller.fillDDAlbums()
         self._txtInN = ft.TextField(label="Numero di brani")
         self._btnSelezione = ft.ElevatedButton(text="Trova selezione album",
                                               on_click=self._controller.handleSelezione)
