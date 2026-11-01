@@ -73,5 +73,54 @@ class Controller:
 
         self._view.update_page()
 
-    def handleSelezione(self,e):
-        pass
+    def handleSelezione(self, e):
+        self._view._txt_result.controls.clear()
+
+        # validazione 1: grafo creato
+        if self._model.getNumNodi() == 0:
+            self._view.create_alert("Creare prima il grafo.")
+            return
+
+        # validazione 2: album scelto
+        if self._view._ddAlbum.value is None:
+            self._view.create_alert("Selezionare un album.")
+            return
+
+        # validazione 3: N intero (anche il campo vuoto "" dà ValueError)
+        try:
+            N = int(self._view._txtInN.value)
+        except ValueError:
+            self._view.create_alert("Inserire un numero intero per N.")
+            return
+
+        # validazione 4: N almeno 1 (il prof non lo controlla)
+        if N < 1:
+            self._view.create_alert("N deve essere almeno 1.")
+            return
+
+        # stringa -> int -> OGGETTO Album (il Model vuole l'oggetto)
+        start = self._model.getAlbumById(int(self._view._ddAlbum.value))
+        if start is None:
+            self._view.create_alert("Album non presente nel grafo.")
+            return
+
+        selezione, tot_brani = self._model.getBestSelection(start, N)  # spacchetto 2 valori
+
+        # nessuna selezione: N più grande del numero di componenti
+        if len(selezione) == 0:
+            self._view._txt_result.controls.append(ft.Text(
+                f"Nessuna selezione trovata: le componenti connesse sono solo "
+                f"{self._model.getNumConnectedComponents()}."))
+            self._view.update_page()
+            return
+
+        self._view._txt_result.controls.append(ft.Text("Album selezionati:"))
+        # lista ordinata per titolo
+        for album in sorted(selezione, key=lambda a: a.Title):
+            # generi dell'album: di solito uno solo, ma 11 album ne hanno più di uno
+            generi = sorted({t.GenreId for t in album.Tracks})
+            self._view._txt_result.controls.append(ft.Text(
+                f"{album.Title} - genere: {', '.join(str(g) for g in generi)} - {len(album.Tracks)} brani"))
+        self._view._txt_result.controls.append(ft.Text(f"Numero di album selezionati: {len(selezione)}"))
+        self._view._txt_result.controls.append(ft.Text(f"Numero complessivo di brani: {tot_brani}"))
+        self._view.update_page()
